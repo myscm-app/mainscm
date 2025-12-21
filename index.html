@@ -63,29 +63,19 @@
             const [svgContent, setSvgContent] = useState('');
 
             useEffect(() => {
-                // Check if Lucide is loaded and the icon exists
                 if (window.lucide && window.lucide.icons && window.lucide.icons[name]) {
                     const iconDef = window.lucide.icons[name];
-                    
-                    // Fallback to lucide.createElement because toSvg might not exist in UMD build
                     if (typeof window.lucide.createElement === 'function') {
                         const svgElement = window.lucide.createElement(iconDef);
-                        
-                        // Preserve existing classes (lucide defaults) and add user classes
                         const currentClass = svgElement.getAttribute('class') || '';
                         svgElement.setAttribute('class', `${currentClass} ${className || ''}`.trim());
-                        
-                        // Set defaults if not provided in props
                         if (!props.width) svgElement.setAttribute('width', '24');
                         if (!props.height) svgElement.setAttribute('height', '24');
                         if (!props.strokeWidth) svgElement.setAttribute('stroke-width', '2');
-                        
-                        // Apply other props
                         Object.entries(props).forEach(([key, value]) => {
                              const attrName = key === 'strokeWidth' ? 'stroke-width' : key;
                              svgElement.setAttribute(attrName, value);
                         });
-
                         setSvgContent(svgElement.outerHTML);
                     }
                 }
@@ -129,8 +119,107 @@
             Receipt: (p) => <LucideIcon name="Receipt" {...p} />,
             ArrowRight: (p) => <LucideIcon name="ArrowRight" {...p} />,
             Factory: (p) => <LucideIcon name="Factory" {...p} />,
-            Pickaxe: (p) => <LucideIcon name="Pickaxe" {...p} /> // Added missing icon
+            Pickaxe: (p) => <LucideIcon name="Pickaxe" {...p} />,
+            Printer: (p) => <LucideIcon name="Printer" {...p} />,
+            FileCheck: (p) => <LucideIcon name="FileCheck" {...p} />,
+            PlayCircle: (p) => <LucideIcon name="PlayCircle" {...p} />,
+            LayoutDashboard: (p) => <LucideIcon name="LayoutDashboard" {...p} />
         };
+
+        // --- REUSABLE AUTH MODAL ---
+        const AuthModal = ({ isOpen, onClose, onSuccess, title, requiredUser, requiredPass }) => {
+            const [username, setUsername] = useState('');
+            const [password, setPassword] = useState('');
+            const [error, setError] = useState('');
+
+            useEffect(() => {
+                if(isOpen) {
+                    setUsername('');
+                    setPassword('');
+                    setError('');
+                }
+            }, [isOpen]);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (username === requiredUser && password === requiredPass) {
+                    onSuccess();
+                } else {
+                    setError('Username atau Password salah!');
+                }
+            };
+
+            if (!isOpen) return null;
+
+            return (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fadeIn">
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative">
+                        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                            <Icons.X className="w-5 h-5" />
+                        </button>
+                        
+                        <div className="text-center mb-6">
+                            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <Icons.Lock className="w-6 h-6 text-blue-600" />
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-800">{title}</h3>
+                            <p className="text-xs text-slate-500">Silakan login untuk mengakses dokumen ini.</p>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-600 mb-1">Username</label>
+                                <input 
+                                    type="text" 
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                    placeholder="Masukkan username"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-600 mb-1">Password</label>
+                                <input 
+                                    type="password" 
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                    placeholder="Masukkan password"
+                                />
+                            </div>
+                            
+                            {error && (
+                                <div className="p-2 bg-red-50 text-red-600 text-xs rounded-lg flex items-center gap-2">
+                                    <Icons.AlertTriangle className="w-4 h-4" /> {error}
+                                </div>
+                            )}
+
+                            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition-all shadow-md">
+                                Login & Buka
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        const DashboardCard = ({ title, value, subtitle, icon: Icon, color, trend }) => (
+            <div className="glass-panel rounded-2xl p-6 transition-all hover:-translate-y-1">
+                <div className="flex justify-between items-start mb-4">
+                    <div className={`p-3 rounded-xl ${color} bg-opacity-10`}>
+                        <Icon className={`w-6 h-6 ${color.replace('bg-', 'text-').replace('-500', '-600')}`} />
+                    </div>
+                    {trend && (
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${trend === 'up' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
+                            {trend === 'up' ? '+2.4%' : '-1.2%'}
+                        </span>
+                    )}
+                </div>
+                <h3 className="text-slate-500 text-sm font-medium">{title}</h3>
+                <p className="text-2xl font-bold text-slate-800 mt-1">{value}</p>
+                <p className="text-slate-400 text-xs mt-1">{subtitle}</p>
+            </div>
+        );
 
         // --- COMPONENTS HALAMAN ---
 
@@ -158,39 +247,57 @@
                         <DashboardCard title="Trading Vol" value="$45.2k" subtitle="Daily run rate" icon={Icons.Activity} color="bg-purple-500" trend="up" />
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Live Feed */}
-                        <div className="lg:col-span-2 glass-panel rounded-3xl p-6">
-                            <h3 className="text-slate-800 font-bold text-lg mb-6 flex items-center gap-2">
+                    {/* UPDATED LAYOUT: 3 SEPARATE COLUMNS WITH EQUAL HEIGHT */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        
+                        {/* COLUMN 1: VIDEO CARD */}
+                        <div className="glass-panel rounded-3xl p-3 shadow-md h-full flex flex-col justify-center">
+                            <div className="flex items-center gap-2 mb-3 px-2">
+                                <div className="p-1 bg-red-100 rounded-lg">
+                                    <Icons.PlayCircle className="w-4 h-4 text-red-600" />
+                                </div>
+                                <span className="text-sm font-bold text-slate-700">Company Update</span>
+                            </div>
+                            <div className="relative w-full h-0 pb-[56.25%] rounded-2xl overflow-hidden bg-slate-900 shadow-inner mt-auto mb-auto">
+                                <iframe 
+                                    src="https://drive.google.com/file/d/1uOpD0o901fWEYRpKXc1TlYWnrbSjsAKA/preview" 
+                                    className="absolute top-0 left-0 w-full h-full"
+                                    allow="autoplay"
+                                    allowFullScreen
+                                    title="SCM Video"
+                                ></iframe>
+                            </div>
+                        </div>
+
+                        {/* COLUMN 2: FEED CARD */}
+                        <div className="glass-panel rounded-3xl p-6 h-full flex flex-col">
+                            <h3 className="text-slate-800 font-bold text-lg mb-6 flex items-center gap-2 shrink-0">
                                 <div className="p-1.5 bg-blue-100 rounded-lg">
                                     <Icons.Activity className="text-blue-600 w-5 h-5" />
                                 </div>
-                                Live Operations Feed
+                                Live Feed
                             </h3>
-                            <div className="space-y-3">
+                            <div className="space-y-3 flex-1">
                                 {feedItems.map((item) => (
-                                    <div key={item.id} className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-slate-100 hover:border-blue-200 transition-all cursor-pointer">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border shrink-0 ${item.status === 'Pending' ? 'bg-amber-50 border-amber-100' : 'bg-blue-50 border-blue-100'}`}>
-                                            <Icons.Package className={`w-5 h-5 ${item.status === 'Pending' ? 'text-amber-600' : 'text-blue-600'}`} />
+                                    <div key={item.id} className="flex items-center gap-3 p-3 rounded-2xl bg-white border border-slate-100 hover:border-blue-200 transition-all cursor-pointer">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border shrink-0 ${item.status === 'Pending' ? 'bg-amber-50 border-amber-100' : 'bg-blue-50 border-blue-100'}`}>
+                                            <Icons.Package className={`w-4 h-4 ${item.status === 'Pending' ? 'text-amber-600' : 'text-blue-600'}`} />
                                         </div>
-                                        <div className="flex-1">
-                                            <p className="text-slate-700 text-sm font-semibold capitalize">{item.text}</p>
-                                            <p className="text-slate-400 text-xs mt-0.5">Updated {item.time}</p>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-slate-700 text-xs font-semibold capitalize truncate">{item.text}</p>
+                                            <p className="text-slate-400 text-[10px] mt-0.5">{item.time}</p>
                                         </div>
-                                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${item.status === 'Pending' ? 'text-amber-600 bg-amber-50' : 'text-blue-600 bg-blue-50'}`}>
-                                            {item.status}
-                                        </span>
                                     </div>
                                 ))}
                             </div>
                         </div>
 
-                        {/* Forex Card */}
-                        <div className="bg-gradient-to-br from-indigo-800 to-blue-900 rounded-3xl p-6 text-white relative overflow-hidden shadow-xl">
+                        {/* COLUMN 3: FOREX CARD */}
+                        <div className="bg-gradient-to-br from-indigo-800 to-blue-900 rounded-3xl p-6 text-white relative overflow-hidden shadow-xl h-full flex flex-col">
                             <div className="absolute top-0 right-0 p-16 bg-white/10 rounded-full blur-3xl transform translate-x-10 -translate-y-10"></div>
-                            <div className="relative z-10">
-                                <h3 className="font-bold text-lg flex items-center gap-2 mb-6"><Icons.DollarSign className="w-5 h-5 text-green-300" /> Kurs Valas</h3>
-                                <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-1">
+                            <div className="relative z-10 flex flex-col h-full">
+                                <h3 className="font-bold text-lg flex items-center gap-2 mb-6 shrink-0"><Icons.DollarSign className="w-5 h-5 text-green-300" /> Kurs Valas</h3>
+                                <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-1 flex-1">
                                     <div className="grid grid-cols-3 text-[10px] uppercase text-blue-200 font-bold p-2 border-b border-white/10">
                                         <span>Mata Uang</span><span className="text-right">Beli</span><span className="text-right">Jual</span>
                                     </div>
@@ -210,24 +317,6 @@
                 </div>
             );
         };
-
-        const DashboardCard = ({ title, value, subtitle, icon: Icon, color, trend }) => (
-            <div className="glass-panel rounded-2xl p-6 transition-all hover:-translate-y-1">
-                <div className="flex justify-between items-start mb-4">
-                    <div className={`p-3 rounded-xl ${color} bg-opacity-10`}>
-                        <Icon className={`w-6 h-6 ${color.replace('bg-', 'text-').replace('-500', '-600')}`} />
-                    </div>
-                    {trend && (
-                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${trend === 'up' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
-                            {trend === 'up' ? '+2.4%' : '-1.2%'}
-                        </span>
-                    )}
-                </div>
-                <h3 className="text-slate-500 text-sm font-medium">{title}</h3>
-                <p className="text-2xl font-bold text-slate-800 mt-1">{value}</p>
-                <p className="text-slate-400 text-xs mt-1">{subtitle}</p>
-            </div>
-        );
 
         // 2. OPS SUPPORT PAGE
         const OpsSupportContent = () => {
@@ -271,26 +360,68 @@
 
         // 3. TRADING PAGE
         const TradingContent = () => {
+            const [modalConfig, setModalConfig] = useState({ isOpen: false, url: '', title: '' });
+
             const products = [
                 { name: "Batu Kapur", type: "Raw Material", stock: "High", icon: Icons.Construction },
                 { name: "Limestone", type: "Raw Material", stock: "Medium", icon: Icons.Gem },
                 { name: "CAO (Kalsium Oksida)", type: "Processed", stock: "Low", icon: Icons.Factory },
-                { name: "Mineral Mix", type: "Compound", stock: "High", icon: Icons.Pickaxe }, // Fallback icon logic if needed
+                { name: "Mineral Mix", type: "Compound", stock: "High", icon: Icons.Pickaxe },
                 { name: "Batu Split", type: "Construction", stock: "Very High", icon: Icons.Hammer },
                 { name: "Bahan Bangunan", type: "General", stock: "Medium", icon: Icons.Package }
             ];
 
+            const tradingLink = "https://script.google.com/macros/s/AKfycby5TkOXsF8s2oTnvVumjkLRcUn7CXd0AU7tVy1iYiFWLjXd4TY9gdmOrJ15J-a4_Ax0/exec";
+
+            // Surat Jalan MKI (Sekarang Tanpa Password)
+            const openMKI = () => {
+                window.open(tradingLink, '_blank');
+            };
+
+            // Surat Jalan Trading (Sekarang Pakai Password)
+            const openTrading = () => {
+                setModalConfig({
+                    isOpen: true,
+                    url: tradingLink,
+                    title: 'Login Akses Trading'
+                });
+            };
+
             return (
                 <div className="animate-fadeIn space-y-8">
+                    <AuthModal 
+                        isOpen={modalConfig.isOpen}
+                        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+                        onSuccess={() => {
+                            window.open(modalConfig.url, '_blank');
+                            setModalConfig({ ...modalConfig, isOpen: false });
+                        }}
+                        title={modalConfig.title || "Login Akses"}
+                        requiredUser="tadmin"
+                        requiredPass="trading01"
+                    />
+
                     <div className="bg-gradient-to-r from-purple-800 to-indigo-900 rounded-3xl p-8 text-white shadow-lg shadow-indigo-200">
-                        <div className="flex justify-between items-center">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                             <div>
                                 <h2 className="text-3xl font-bold mb-2">Trading Commodities</h2>
                                 <p className="text-purple-200">Informasi stok dan harga pasar komoditas terkini.</p>
                             </div>
-                            <div className="hidden md:block p-4 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/20">
-                                <div className="text-xs text-purple-200 uppercase font-bold">Trading Volume</div>
-                                <div className="text-2xl font-bold">$ 2.4M / month</div>
+                            
+                            {/* UPDATED TRADING ACTIONS */}
+                            <div className="flex gap-3">
+                                {/* Trading - Now Locked */}
+                                <button onClick={openTrading} className="flex items-center gap-2 px-4 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-xl border border-white/20 transition-all font-semibold text-sm">
+                                    <Icons.Printer className="w-4 h-4 text-purple-200" />
+                                    Surat Jalan Trading
+                                    <Icons.Lock className="w-3 h-3 text-purple-200 ml-1" />
+                                </button>
+                                
+                                {/* MKI - Now Unlocked */}
+                                <button onClick={openMKI} className="flex items-center gap-2 px-4 py-3 bg-indigo-500 hover:bg-indigo-600 rounded-xl border border-indigo-400/50 shadow-lg shadow-indigo-500/30 transition-all font-semibold text-sm">
+                                    <Icons.FileCheck className="w-4 h-4 text-white" />
+                                    Surat Jalan MKI
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -328,6 +459,8 @@
 
         // 4. KOPERASI PAGE
         const KoperasiContent = () => {
+            const [modalConfig, setModalConfig] = useState({ isOpen: false, url: '', title: '' });
+
             const menuLinks = [
                 { 
                     title: "Surat Order", 
@@ -345,8 +478,28 @@
                 }
             ];
 
+            const handleLinkClick = (menu) => {
+                setModalConfig({
+                    isOpen: true,
+                    url: menu.url,
+                    title: `Login ${menu.title}`
+                });
+            };
+
             return (
                 <div className="animate-fadeIn min-h-[60vh] flex flex-col items-center justify-center">
+                    <AuthModal 
+                        isOpen={modalConfig.isOpen}
+                        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+                        onSuccess={() => {
+                            window.open(modalConfig.url, '_blank');
+                            setModalConfig({ ...modalConfig, isOpen: false });
+                        }}
+                        title={modalConfig.title}
+                        requiredUser="admin"
+                        requiredPass="kawanmki01"
+                    />
+
                     <div className="w-full max-w-4xl mx-auto">
                         <div className="text-center mb-10">
                             <div className="inline-flex p-3 bg-emerald-100 rounded-2xl mb-4">
@@ -358,12 +511,10 @@
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-4">
                             {menuLinks.map((menu, idx) => (
-                                <a 
+                                <button 
                                     key={idx} 
-                                    href={menu.url} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="group relative overflow-hidden bg-white rounded-3xl p-8 border border-slate-200 shadow-lg hover:shadow-2xl hover:border-emerald-300 transition-all duration-300 transform hover:-translate-y-2"
+                                    onClick={() => handleLinkClick(menu)}
+                                    className="group relative overflow-hidden bg-white rounded-3xl p-8 border border-slate-200 shadow-lg hover:shadow-2xl hover:border-emerald-300 transition-all duration-300 transform hover:-translate-y-2 w-full text-left"
                                 >
                                     <div className={`absolute top-0 right-0 w-32 h-32 ${menu.color} opacity-10 rounded-bl-full group-hover:scale-150 transition-transform duration-500`}></div>
                                     
@@ -377,11 +528,11 @@
                                             <p className="text-slate-500 mb-6">{menu.desc}</p>
                                             
                                             <span className="inline-flex items-center gap-2 text-sm font-bold text-slate-800 group-hover:gap-4 transition-all">
-                                                Akses Sekarang <Icons.ArrowRight className="w-4 h-4 text-emerald-600" />
+                                                Akses Sekarang <Icons.Lock className="w-4 h-4 text-emerald-600" />
                                             </span>
                                         </div>
                                     </div>
-                                </a>
+                                </button>
                             ))}
                         </div>
                         
@@ -395,6 +546,1135 @@
                                 </p>
                             </div>
                         </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- DASHBOARD INVENTORY HTML CONTENT ---
+        const DASHBOARD_INVENTORY_HTML = `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyScm</title>
+  
+  <!-- LIBRARIES -->
+  <script src="https://cdn.tailwindcss.com"><\/script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"><\/script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"><\/script>
+
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F8FAFC; color: #334155; overflow-x: hidden; }
+    
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      border: 1px solid #E2E8F0;
+      transition: all 0.2s ease;
+    }
+    
+    .loader {
+      width: 20px; height: 20px;
+      border: 2px solid #3b82f6;
+      border-bottom-color: transparent;
+      border-radius: 50%;
+      display: inline-block;
+      animation: rotation 1s linear infinite;
+    }
+    
+    .uom-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      margin-right: 6px;
+      margin-bottom: 6px;
+      background-color: #F1F5F9; 
+      color: #334155; 
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid #E2E8F0;
+      transition: all 0.2s;
+    }
+    .uom-badge:hover {
+      background-color: #E0E7FF; 
+      color: #4338CA; 
+      border-color: #C7D2FE;
+    }
+    .uom-qty {
+      color: #0F172A; 
+      font-weight: 800;
+      margin-right: 4px;
+    }
+
+    /* SLIDE-OVER PANEL STYLES */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(2px);
+      display: flex; justify-content: flex-end; 
+      align-items: stretch;
+      z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .modal-content {
+      background: white; width: 100%; max-width: 500px; height: 100%;
+      box-shadow: -10px 0 25px -5px rgba(0, 0, 0, 0.1);
+      display: flex; flex-direction: column; 
+      transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .modal-overlay.active .modal-content { transform: translateX(0); }
+
+    /* RUNNING TEXT (MARQUEE) STYLES */
+    .marquee-wrapper {
+      overflow: hidden;
+      white-space: nowrap;
+      position: relative;
+      mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+    }
+    .marquee-content {
+      display: inline-block;
+      white-space: nowrap;
+      animation: scrolling 40s linear infinite;
+      padding-left: 100%;
+    }
+    .marquee-content:hover {
+      animation-play-state: paused;
+    }
+    @keyframes scrolling {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+
+    /* SCROLLBAR UNTUK LIST YTD/MTD */
+    .custom-scroll::-webkit-scrollbar { width: 4px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 2px; }
+
+    @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="min-h-screen bg-[#F8FAFC]">
+
+  <!-- TOMBOL FULLSCREEN MELAYANG (TOP LEFT) -->
+  <button onclick="toggleFullscreen()" id="btnFullscreen" class="fixed top-4 left-4 z-[90] bg-white hover:bg-slate-100 text-slate-600 p-3 rounded-full shadow-lg border border-slate-200 transition-all duration-300 group" title="Mode Layar Penuh">
+    <i class="ph-bold ph-arrows-out text-xl group-hover:scale-110 transition-transform"></i>
+  </button>
+
+  <!-- WRAPPER UNTUK KONTEN UTAMA (AGAR BISA DI-SCALE) -->
+  <div id="dashboard-container" class="origin-top-left transition-all duration-500 p-4 md:p-8 pb-20 w-full">
+
+      <!-- HEADER & FILTER -->
+      <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 ml-16">
+        <div>
+          <h1 class="text-3xl font-bold flex items-center gap-2 text-slate-900">
+            <i class="ph-fill ph-squares-four text-blue-600"></i>
+            MyScm
+          </h1>
+          <p class="text-slate-500 mt-1 flex items-center gap-2">
+            Dashboard Performa Inventaris Real-time
+            <span id="loadingIndicator" class="hidden flex items-center gap-2 text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">
+              <span class="loader w-3 h-3 border-2"></span> Syncing...
+            </span>
+          </p>
+          <div id="connectionStatus" class="hidden mt-2 text-xs font-medium px-2 py-1 rounded w-fit"></div>
+        </div>
+        
+        <div class="flex flex-wrap gap-2 bg-white p-1.5 rounded-xl shadow-sm border border-slate-200 items-center">
+          <!-- Filter Tahun -->
+          <div class="relative">
+            <select id="filterYear" onchange="applyFilters()" class="bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 py-2 pl-2 pr-8 cursor-pointer outline-none hover:bg-slate-50 rounded-lg appearance-none">
+              <option value="">Tahun...</option>
+            </select>
+            <i class="ph-bold ph-caret-down absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+          </div>
+
+          <div class="w-[1px] h-6 bg-slate-200"></div>
+
+          <!-- Filter Bulan -->
+          <div class="relative">
+            <select id="filterMonth" onchange="applyFilters()" class="bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 py-2 pl-2 pr-8 cursor-pointer outline-none hover:bg-slate-50 rounded-lg appearance-none" style="min-width: 100px;">
+              <option value="all">Semua Bulan</option>
+              <option value="0">Januari</option>
+              <option value="1">Februari</option>
+              <option value="2">Maret</option>
+              <option value="3">April</option>
+              <option value="4">Mei</option>
+              <option value="5">Juni</option>
+              <option value="6">Juli</option>
+              <option value="7">Agustus</option>
+              <option value="8">September</option>
+              <option value="9">Oktober</option>
+              <option value="10">November</option>
+              <option value="11">Desember</option>
+            </select>
+            <i class="ph-bold ph-caret-down absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+          </div>
+
+          <div class="w-[1px] h-6 bg-slate-200"></div>
+
+          <!-- Filter Segment -->
+          <div class="relative">
+            <select id="filterSegment" onchange="applyFilters()" class="bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 py-2 pl-2 pr-8 cursor-pointer outline-none hover:bg-slate-50 rounded-lg appearance-none" style="min-width: 100px;">
+              <option value="all">Semua Segment</option>
+            </select>
+            <i class="ph-bold ph-caret-down absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+          </div>
+
+          <div class="w-[1px] h-6 bg-slate-200"></div>
+
+          <!-- Filter UOM -->
+          <div class="relative">
+            <select id="filterUOM" onchange="applyFilters()" class="bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 py-2 pl-2 pr-8 cursor-pointer outline-none hover:bg-slate-50 rounded-lg appearance-none" style="min-width: 100px;">
+              <option value="all">Semua Satuan</option>
+            </select>
+            <i class="ph-bold ph-caret-down absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+          </div>
+          <div class="w-[1px] h-6 bg-slate-200"></div>
+          <button id="btnQty" onclick="setUnit('qty')" class="px-4 py-1.5 rounded-lg text-sm font-medium transition bg-blue-600 text-white shadow-sm">Kuantitas</button>
+          <button id="btnTon" onclick="setUnit('ton')" class="px-4 py-1.5 rounded-lg text-sm font-medium transition text-slate-600 hover:bg-slate-100">Tonase</button>
+        </div>
+      </header>
+
+      <!-- ERROR MESSAGE -->
+      <div id="errorContainer" class="hidden mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-800 flex items-start gap-3">
+        <i class="ph-fill ph-warning-circle text-xl mt-0.5"></i>
+        <div>
+          <h4 class="font-bold text-sm">Gagal Terhubung ke Spreadsheet</h4>
+          <p id="errorMessage" class="text-xs mt-1">Error detail...</p>
+        </div>
+      </div>
+
+      <!-- KPI CARDS -->
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6 mb-8">
+        
+        <!-- KPI 1: TINGKAT INVENTARIS -->
+        <div class="card p-6">
+          <div class="flex justify-between items-start mb-2">
+            <div class="p-2 bg-blue-50 rounded-lg text-blue-600"><i class="ph-fill ph-package text-xl"></i></div>
+            <span class="text-xs font-bold px-2 py-1 rounded bg-green-100 text-green-700">Live</span>
+          </div>
+          <h3 class="text-slate-500 text-sm font-medium mb-3">Tingkat Inventaris</h3>
+          <div id="kpiStockContainer" class="min-h-[3rem] flex flex-wrap content-start">
+             <p class="text-2xl font-bold text-slate-900 leading-tight" id="kpiStock">-</p>
+          </div>
+          <p class="text-slate-400 text-xs mt-2 pt-2 border-t border-slate-100" id="kpiStockSub">Sisa Stok per Satuan</p>
+        </div>
+
+        <!-- KPI 2: YTD/MTD Summary & RATIO IN/OUT -->
+        <div class="card p-6 flex flex-col">
+          <div class="flex justify-between items-start mb-2">
+            <div class="p-2 bg-indigo-50 rounded-lg text-indigo-600"><i class="ph-fill ph-chart-bar text-xl"></i></div>
+            <span id="badgeYTD" class="text-xs font-bold px-2 py-1 rounded bg-indigo-100 text-indigo-700">YTD</span>
+          </div>
+          <h3 class="text-slate-500 text-sm font-medium mb-2" id="titleYTD">Performance YTD</h3>
+          
+          <!-- RATIO BAR -->
+          <div class="mb-3">
+             <div class="flex justify-between text-[10px] mb-1 font-bold text-slate-500">
+                <span>Inbound</span>
+                <span>Outbound</span>
+             </div>
+             <div class="w-full h-2 bg-slate-100 rounded-full flex overflow-hidden">
+                <div id="ratioBarIn" class="h-full bg-emerald-500" style="width: 50%"></div>
+                <div id="ratioBarOut" class="h-full bg-blue-500" style="width: 50%"></div>
+             </div>
+             <div class="flex justify-between text-[10px] mt-1 font-mono">
+                <span id="textRatioIn" class="text-emerald-600">0</span>
+                <span id="textRatioOut" class="text-blue-600">0</span>
+             </div>
+          </div>
+
+          <!-- List Scrollable untuk Type -->
+          <div class="flex-1 overflow-y-auto custom-scroll pr-1 max-h-[60px]">
+            <ul id="listYTD" class="space-y-1 text-xs">
+               <li class="text-slate-400 italic">Memuat data...</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- KPI 3: DOI -->
+        <div class="card p-6">
+          <div class="flex justify-between items-start mb-4">
+            <div class="p-2 bg-orange-50 rounded-lg text-orange-600"><i class="ph-fill ph-clock text-xl"></i></div>
+            <span id="badgeDOI" class="text-xs font-bold px-2 py-1 rounded bg-blue-100 text-blue-700">Optimal</span>
+          </div>
+          <h3 class="text-slate-500 text-sm font-medium">Days of Inventory (DOI)</h3>
+          <p class="text-2xl font-bold my-1 text-slate-900" id="kpiDOI">-</p>
+          <p class="text-slate-400 text-xs">Target: <span id="lblTargetDOI">45</span> Hari</p>
+        </div>
+
+        <!-- KPI 4: UTILISASI -->
+        <div class="card p-6">
+          <div class="flex justify-between items-center mb-4">
+            <div class="p-2 bg-green-50 rounded-lg text-green-600"><i class="ph-fill ph-database text-xl"></i></div>
+            <h3 class="text-slate-500 text-sm font-medium">Utilisasi Gudang</h3>
+          </div>
+          <div class="space-y-3">
+            <div>
+              <div class="flex justify-between text-[10px] mb-1"><span class="font-bold text-slate-600">Pallet (Zak)</span> <span id="utilTextZak">0%</span></div>
+              <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barUtilZak" class="h-full bg-indigo-500" style="width: 0%"></div></div>
+              <input type="number" id="inputMaxZak" value="5000" class="mt-1 w-full text-[10px] bg-slate-50 border border-slate-200 rounded px-1 text-right" onchange="updateUtilization()">
+            </div>
+            <div>
+              <div class="flex justify-between text-[10px] mb-1"><span class="font-bold text-slate-600">Rack (Box)</span> <span id="utilTextBox">0%</span></div>
+              <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div id="barUtilBox" class="h-full bg-purple-500" style="width: 0%"></div></div>
+              <input type="number" id="inputMaxBox" value="2000" class="mt-1 w-full text-[10px] bg-slate-50 border border-slate-200 rounded px-1 text-right" onchange="updateUtilization()">
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI 5: ASET -->
+        <div class="card p-6">
+          <div class="flex justify-between items-start mb-4">
+            <div class="p-2 bg-purple-50 rounded-lg text-purple-600"><i class="ph-fill ph-trend-up text-xl"></i></div>
+          </div>
+          <h3 class="text-slate-500 text-sm font-medium">Estimasi Nilai Aset</h3>
+          <p class="text-2xl font-bold my-1 text-slate-900" id="kpiCost">-</p>
+          <p class="text-slate-400 text-xs">Total Aset (Sum Kolom M)</p>
+        </div>
+      </div>
+
+      <!-- CHARTS ROW 1 -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <div class="lg:col-span-2 card p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="font-bold text-lg text-slate-800">Tren Stok & Pergerakan</h3>
+            <div class="flex gap-2 bg-slate-50 p-1 rounded-lg">
+               <button onclick="setTrendMode('monthly')" id="btnTrendMonth" class="text-xs px-3 py-1 rounded font-bold bg-white shadow-sm text-slate-800 transition">Bulanan</button>
+               <button onclick="setTrendMode('daily')" id="btnTrendDay" class="text-xs px-3 py-1 rounded text-slate-500 hover:bg-white transition">Harian</button>
+            </div>
+          </div>
+          <div id="chartTrend" style="min-height: 350px;"></div>
+        </div>
+        <div class="card p-6">
+          <h3 class="font-bold text-lg mb-6 text-slate-800">Analisis Umur Stok</h3>
+          <div id="chartPie" class="flex justify-center mb-4"></div>
+          <div id="agingLegend" class="space-y-3"></div>
+        </div>
+      </div>
+
+      <!-- CHART UTILISASI (BARU) -->
+      <div class="card p-6 mb-8">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="font-bold text-lg text-slate-800">Tren Utilisasi Kapasitas</h3>
+          <div class="flex gap-2 text-xs">
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Stok On Hand</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500"></span> Max Capacity</span>
+          </div>
+        </div>
+        <div id="chartUtilization" style="min-height: 300px;"></div>
+      </div>
+
+      <!-- TABLE USIA STOK & Risk Analysis -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div class="card p-6">
+          <div class="flex items-center gap-2 mb-4">
+            <i class="ph-fill ph-hourglass-high text-indigo-500 text-xl"></i>
+            <h3 class="font-bold text-lg text-slate-800">Laporan Detail Usia Stok</h3>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead class="bg-slate-50 text-slate-500 font-semibold text-xs uppercase tracking-wider border-b border-slate-200">
+                <tr>
+                  <th class="px-4 py-3">Kategori</th>
+                  <th class="px-4 py-3 text-right">Qty</th>
+                  <th class="px-4 py-3 text-right">Valuasi (Est)</th>
+                  <th class="px-4 py-3 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody id="agingTableBody" class="divide-y divide-slate-100 bg-white"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card p-6">
+          <div class="flex items-center gap-2 mb-6">
+            <i class="ph-fill ph-warning text-red-500 text-xl"></i>
+            <h3 class="font-bold text-lg text-red-700">Analisa Risiko & Dead Stock</h3>
+          </div>
+          <div class="space-y-4">
+            <div class="flex items-center justify-between p-3 rounded-xl border border-slate-100">
+              <div><p class="text-sm font-bold text-slate-700">Akurasi Stok</p><p class="text-xs text-slate-400">Target > 99%</p></div>
+              <div class="text-right"><p class="font-bold text-green-600">99.8%</p><div class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-green-100 text-green-700">Aman</div></div>
+            </div>
+            <div class="flex items-center justify-between p-3 rounded-xl border border-slate-100">
+              <div><p class="text-sm font-bold text-slate-700">Tingkat Kerusakan</p><p class="text-xs text-slate-400">Batas Max 0.05%</p></div>
+              <div class="text-right"><p class="font-bold text-slate-800" id="valDamage">-</p><div id="badgeDamage" class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">-</div></div>
+            </div>
+            <div class="p-4 bg-red-50 rounded-xl border border-red-100 mt-4">
+              <h4 class="text-red-800 font-bold text-sm mb-2 uppercase flex items-center gap-2"><i class="ph-fill ph-skull"></i> Dead Stock Kritis (> 10 Bulan)</h4>
+              <ul id="deadStockList" class="text-sm text-red-700 space-y-2 max-h-40 overflow-y-auto pr-2"><li class="text-xs italic text-red-400">Memuat data risiko...</li></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-6 mb-8">
+        <h3 class="font-bold text-lg mb-6 text-slate-800">Distribusi Top SKU</h3>
+        <div id="chartTopSKU" style="min-height: 300px;"></div>
+      </div>
+
+  </div> <!-- END DASHBOARD CONTAINER -->
+
+  <!-- FIXED FOOTER RUNNING TEXT (AI INSIGHTS) -->
+  <div class="fixed bottom-0 left-0 w-full bg-indigo-900 text-white z-50 text-xs py-2 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] border-t border-indigo-700 flex items-center">
+    <div class="bg-indigo-800 px-4 py-2 font-bold z-10 absolute left-0 h-full flex items-center shadow-lg uppercase tracking-wide text-[10px] sm:text-xs">
+      <i class="ph-fill ph-sparkle text-yellow-300 mr-2 text-sm"></i> AI Analysis
+    </div>
+    <div class="marquee-wrapper w-full flex items-center h-full pl-32">
+       <div id="aiTicker" class="marquee-content flex gap-12 items-center font-medium">
+         <span>Menunggu data...</span>
+       </div>
+    </div>
+  </div>
+
+  <!-- MODAL DETAIL (SIDE PANEL STYLE) -->
+  <div id="detailModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="flex justify-between items-center p-6 border-b border-slate-100">
+        <h3 class="text-xl font-bold text-slate-800" id="modalTitle">Detail Stok</h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 transition"><i class="ph-bold ph-x text-xl"></i></button>
+      </div>
+      <div class="flex-1 overflow-y-auto p-6">
+        <table class="w-full text-sm text-left">
+          <thead class="bg-slate-50 text-slate-500 font-semibold text-xs uppercase tracking-wider sticky top-0">
+            <tr>
+              <th class="px-4 py-3">Tanggal</th>
+              <th class="px-4 py-3">SKU</th>
+              <th class="px-4 py-3">Nama Produk</th>
+              <th class="px-4 py-3">Lot No.</th>
+              <th class="px-4 py-3 text-right">Qty</th>
+              <th class="px-4 py-3 text-right">Umur</th>
+            </tr>
+          </thead>
+          <tbody id="modalTableBody" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+      <div class="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+        <button onclick="closeModal()" class="px-4 py-2 bg-slate-200 text-slate-700 font-semibold rounded hover:bg-slate-300 transition">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SETTINGS = { MAX_CAPACITY: 10000, TARGET_DOI: 45, COST_EST: 15000 };
+    
+    // MAPPING KOLOM (LOT ADA DI COLUMN H/INDEX 7)
+    const COLS = { 
+      DATE: 1, TYPE: 2, CAT: 3, SKU: 4, NAME: 5, 
+      LOT: 7, // Kolom H
+      QTY: 8, COST: 10, TON: 12, ASSET_VAL: 12,
+      UOM: 13 
+    };
+    
+    const KEYS = {
+      IN: ['in', 'masuk', 'receipt', 'return', 'output', 'produksi'],
+      OUT: ['out', 'keluar', 'delivery', 'kirim', 'sales', 'sellin', 'sample', 'promo', 'broken', 'repark'],
+      DAMAGE: ['damage', 'rusak', 'bad', 'adjust']
+    };
+
+    function generateMockData() {
+      const mock = [];
+      const types = ['Output Produksi', 'Inbound', 'Outbound', 'Delivery', 'Sample', 'Promo'];
+      const segments = ['Food', 'Non-Food', 'Packaging'];
+      const skus = ['SKU-A', 'SKU-B', 'SKU-C'];
+      const uoms = ['Pcs', 'Box', 'Kg', 'Zak']; 
+      for(let i=0; i<80; i++) {
+        const row = new Array(14).fill("");
+        const date = new Date(); date.setDate(date.getDate() - Math.floor(Math.random() * 400));
+        row[COLS.DATE] = date.toISOString().split('T')[0];
+        row[COLS.TYPE] = types[Math.floor(Math.random() * types.length)];
+        row[COLS.CAT] = segments[Math.floor(Math.random() * segments.length)];
+        row[COLS.SKU] = skus[Math.floor(Math.random() * skus.length)];
+        row[COLS.NAME] = \`Produk \${row[COLS.SKU]}\`;
+        row[COLS.LOT] = \`LOT-\${Math.floor(Math.random()*9000)+1000}\`;
+        row[COLS.QTY] = Math.floor(Math.random() * 500) + 50;
+        row[COLS.UOM] = uoms[Math.floor(Math.random() * uoms.length)];
+        row[COLS.TON] = (row[COLS.QTY] * 0.05).toFixed(2);
+        row[COLS.ASSET_VAL] = Math.floor(Math.random() * 5000000) + 1000000;
+        mock.push(row);
+      }
+      return { status: 'success', data: mock, sheetName: 'Mode Simulasi' };
+    }
+
+    let rawData = [];
+    let currentUnit = 'qty';
+    let trendMode = 'daily';
+    let charts = {};
+    let globalStockZak = 0;
+    let globalStockBox = 0;
+    let detailAgingData = { gt3: [], gt5: [], gt10: [] };
+
+    window.onload = function() {
+      const loader = document.getElementById('loadingIndicator');
+      const statusEl = document.getElementById('connectionStatus');
+      loader.classList.remove('hidden');
+      if (typeof google === 'undefined' || typeof google.script === 'undefined') {
+        statusEl.classList.remove('hidden');
+        statusEl.className = "mt-2 text-xs font-bold px-2 py-1 rounded w-fit bg-amber-100 text-amber-700 border border-amber-200";
+        statusEl.innerHTML = "<i class='ph-bold ph-warning'></i> Mode Simulasi";
+        setTimeout(() => { onDataLoaded(generateMockData()); }, 1500);
+      } else {
+        google.script.run.withSuccessHandler((response) => {
+             if(response.status === 'success') {
+                statusEl.classList.remove('hidden');
+                statusEl.className = "mt-2 text-xs font-bold px-2 py-1 rounded w-fit bg-emerald-100 text-emerald-700 border border-emerald-200";
+                statusEl.innerHTML = "<i class='ph-bold ph-check'></i> Terhubung";
+             }
+             onDataLoaded(response);
+          }).withFailureHandler((error) => {
+             loader.classList.add('hidden');
+             document.getElementById('errorMessage').innerText = "Error Teknis: " + error.message;
+             document.getElementById('errorContainer').classList.remove('hidden');
+          }).getDashboardData();
+      }
+    };
+
+    function onDataLoaded(response) {
+      document.getElementById('loadingIndicator').classList.add('hidden');
+      if (response.status === 'error') {
+        document.getElementById('errorMessage').innerText = response.message;
+        document.getElementById('errorContainer').classList.remove('hidden');
+        return;
+      }
+      rawData = response.data;
+      initFilters(rawData);
+      applyFilters();
+    }
+
+    function initFilters(data) { 
+      const years = new Set(); 
+      const uoms = new Set();
+      const segments = new Set();
+      
+      data.forEach(row => { 
+        const d = parseDate(row[COLS.DATE]); if(d) years.add(d.getFullYear()); 
+        
+        const uomRaw = row[COLS.UOM];
+        if(uomRaw && typeof uomRaw === 'string' && uomRaw.trim() !== '') {
+           const cleanUOM = uomRaw.trim().charAt(0).toUpperCase() + uomRaw.trim().slice(1).toLowerCase();
+           uoms.add(cleanUOM);
+        }
+        
+        const segRaw = row[COLS.CAT];
+        if(segRaw && typeof segRaw === 'string' && segRaw.trim() !== '') {
+           segments.add(segRaw.trim());
+        }
+      }); 
+      
+      const selYear = document.getElementById('filterYear'); 
+      selYear.innerHTML = ''; 
+      Array.from(years).sort((a,b)=>b-a).forEach(y => { 
+        const opt = document.createElement('option'); opt.value = y; opt.text = "Tahun " + y; selYear.appendChild(opt); 
+      }); 
+      if(years.size===0) { const o=document.createElement('option'); o.value=new Date().getFullYear(); o.text="Tahun Ini"; selYear.appendChild(o); }
+      
+      const selUOM = document.getElementById('filterUOM');
+      selUOM.innerHTML = '<option value="all">Semua Satuan</option>';
+      Array.from(uoms).sort().forEach(u => {
+        const opt = document.createElement('option'); opt.value = u; opt.text = u; selUOM.appendChild(opt);
+      });
+      
+      const selSegment = document.getElementById('filterSegment');
+      selSegment.innerHTML = '<option value="all">Semua Segment</option>';
+      Array.from(segments).sort().forEach(s => {
+        const opt = document.createElement('option'); opt.value = s; opt.text = s; selSegment.appendChild(opt);
+      });
+    }
+
+    function applyFilters() {
+      const year = document.getElementById('filterYear').value;
+      const month = document.getElementById('filterMonth').value; 
+      const selectedUOM = document.getElementById('filterUOM').value;
+      const selectedSegment = document.getElementById('filterSegment').value;
+      
+      if (!rawData.length || !year) return;
+      
+      const filtered = rawData.filter(row => {
+        const d = parseDate(row[COLS.DATE]);
+        if (!d || d.getFullYear() != year) return false;
+        
+        if (month !== 'all') {
+           if (d.getMonth() != month) return false;
+        }
+        
+        if (selectedUOM !== 'all') {
+           const rowUOM = (row[COLS.UOM] || "").trim().toLowerCase();
+           if(rowUOM !== selectedUOM.toLowerCase()) return false;
+        }
+        
+        if (selectedSegment !== 'all') {
+           const rowSeg = (row[COLS.CAT] || "").trim().toLowerCase();
+           if(rowSeg !== selectedSegment.toLowerCase()) return false;
+        }
+        return true;
+      });
+      processAnalytics(filtered);
+    }
+
+    function processAnalytics(data) {
+      let totalIn = 0, totalOut = 0, totalDamage = 0;
+      let trendData = {}; let skuData = {};
+      let aging = { '0-3': 0, '3-6': 0, '6-10': 0, '10+': 0 };
+      let deadStockItems = [];
+      let directSumTon = 0; let directSumCost = 0; 
+      let uomBreakdown = {};
+      
+      let typeSummary = {};
+      let summaryTotalIn = 0;
+      let summaryTotalOut = 0;
+
+      detailAgingData = { gt3: [], gt5: [], gt10: [] };
+      let stockGt3Mo = { qty: 0, val: 0 };
+      let stockGt5Mo = { qty: 0, val: 0 };
+      let stockGt10Mo = { qty: 0, val: 0 };
+
+      const now = new Date();
+
+      data.forEach(row => {
+        const valQty = parseNum(row[COLS.QTY]);
+        const valTon = parseNum(row[COLS.TON]);
+        const valAsset = parseNum(row[COLS.ASSET_VAL]); 
+        
+        let uom = (row[COLS.UOM] || "Unit").trim();
+        if(uom) uom = uom.charAt(0).toUpperCase() + uom.slice(1).toLowerCase(); 
+        if(!uom) uom = "Unit"; 
+        
+        directSumTon += valTon;
+        directSumCost += valAsset; 
+        
+        const typeRaw = (row[COLS.TYPE] || "").toLowerCase();
+        const typeDisplay = (row[COLS.TYPE] || "Lain-lain").trim(); 
+        
+        const d = parseDate(row[COLS.DATE]);
+        const dateKey = trendMode === 'monthly' ? \`\${d.getFullYear()}-\${String(d.getMonth()+1).padStart(2, '0')}\` : \`\${d.getFullYear()}-\${String(d.getMonth()+1).padStart(2, '0')}-\${String(d.getDate()).padStart(2, '0')}\`;
+        const sku = row[COLS.SKU] || "Unknown";
+        const name = row[COLS.NAME] || "";
+        const lot = row[COLS.LOT] || "-";
+
+        let isIn = KEYS.IN.some(k => typeRaw.includes(k));
+        let isOut = !isIn && KEYS.OUT.some(k => typeRaw.includes(k)); 
+        let isDamage = KEYS.DAMAGE.some(k => typeRaw.includes(k));
+
+        const valMain = currentUnit === 'qty' ? valQty : valTon;
+        
+        if (isIn) summaryTotalIn += Math.abs(valMain);
+        if (isOut) summaryTotalOut += Math.abs(valMain);
+
+        if(!typeSummary[typeDisplay]) {
+            typeSummary[typeDisplay] = { val: 0, uoms: new Set() };
+        }
+        typeSummary[typeDisplay].val += Math.abs(valMain); // Gunakan absolut untuk summary jenis transaksi
+        typeSummary[typeDisplay].uoms.add(uom);
+
+        if(currentUnit === 'qty') {
+            if(!uomBreakdown[uom]) uomBreakdown[uom] = 0;
+            if(isIn) uomBreakdown[uom] += valQty;
+            if(isOut) uomBreakdown[uom] -= valQty;
+        }
+
+        if (isIn) totalIn += valMain;
+        if (isOut) totalOut += valMain;
+        if (isDamage) totalDamage += valMain;
+
+        if (!trendData[dateKey]) trendData[dateKey] = { in: 0, out: 0, stock: 0 };
+        if (isIn) trendData[dateKey].in += valMain;
+        if (isOut) trendData[dateKey].out += valMain;
+
+        if (!skuData[sku]) skuData[sku] = { qty: 0, name: name };
+        if (isIn) skuData[sku].qty += valMain; 
+
+        if (isIn) {
+          const diffDays = Math.floor((now - d) / (1000 * 60 * 60 * 24));
+          const months = diffDays / 30;
+          
+          const itemDetail = {
+             date: d.toLocaleDateString('id-ID'),
+             sku: sku, name: name, lot: lot, qty: valQty, uom: uom, days: diffDays
+          };
+
+          if (months > 3) {
+             stockGt3Mo.qty += valMain; stockGt3Mo.val += (valAsset || 0); 
+             detailAgingData.gt3.push(itemDetail);
+          }
+          if (months > 5) {
+             stockGt5Mo.qty += valMain; stockGt5Mo.val += (valAsset || 0);
+             detailAgingData.gt5.push(itemDetail);
+          }
+          if (months > 10) {
+             stockGt10Mo.qty += valMain; stockGt10Mo.val += (valAsset || 0);
+             detailAgingData.gt10.push(itemDetail);
+          }
+
+          if (months > 10) { 
+            aging['10+'] += valMain;
+            if(deadStockItems.length < 5) deadStockItems.push({ sku, qty: valMain, days: diffDays });
+          } else if (months > 6) aging['6-10'] += valMain;
+          else if (months > 3) aging['3-6'] += valMain;
+          else aging['0-3'] += valMain;
+        }
+      });
+
+      const sortedKeys = Object.keys(trendData).sort();
+      let runningStock = 0;
+      sortedKeys.forEach(k => {
+        runningStock += (trendData[k].in - trendData[k].out);
+        if(runningStock < 0) runningStock = 0;
+        trendData[k].stock = runningStock;
+      });
+
+      const currentStockTon = directSumTon; 
+      const avgDailyOut = totalOut / 365;
+      const currentStockForDOI = currentUnit === 'qty' ? (totalIn - totalOut) : currentStockTon; 
+      const doi = avgDailyOut > 0 ? (currentStockForDOI / avgDailyOut) : 0;
+      const damageRate = totalIn > 0 ? (totalDamage / totalIn) * 100 : 0;
+
+      globalStockZak = uomBreakdown['Zak'] || 0;
+      globalStockBox = uomBreakdown['Box'] || 0;
+      updateUtilization();
+
+      renderSummaryCard(typeSummary, summaryTotalIn, summaryTotalOut);
+
+      const kpiStockContainer = document.getElementById('kpiStockContainer');
+      const kpiStockSub = document.getElementById('kpiStockSub');
+      kpiStockContainer.innerHTML = '';
+
+      if(currentUnit === 'qty') {
+          const sortedUoms = Object.entries(uomBreakdown).sort((a,b) => b[1] - a[1]);
+          if(sortedUoms.length === 0) {
+              kpiStockContainer.innerHTML = '<p class="text-2xl font-bold text-slate-900 leading-tight">0 Unit</p>';
+              kpiStockSub.innerText = "Tidak ada stok";
+          } else {
+              if (sortedUoms.length === 1) {
+                  kpiStockContainer.innerHTML = \`<p class="text-2xl font-bold text-slate-900 leading-tight">\${sortedUoms[0][1].toLocaleString('id-ID')} \${sortedUoms[0][0]}</p>\`;
+              } else {
+                  sortedUoms.forEach(([uomName, uomQty]) => {
+                      if(uomQty !== 0) {
+                        const badge = document.createElement('span');
+                        badge.className = 'uom-badge';
+                        badge.innerHTML = \`<span class="uom-qty">\${uomQty.toLocaleString('id-ID')}</span> \${uomName}\`;
+                        kpiStockContainer.appendChild(badge);
+                      }
+                  });
+              }
+              kpiStockSub.innerText = "Sisa Stok (Masuk - Keluar)";
+          }
+      } else {
+          kpiStockContainer.innerHTML = \`<p class="text-2xl font-bold text-slate-900 leading-tight">\${currentStockTon.toLocaleString('id-ID', {maximumFractionDigits: 2})} Tn</p>\`;
+          kpiStockSub.innerText = "Total Tonase";
+      }
+      
+      document.getElementById('kpiDOI').innerText = doi.toFixed(1) + " Hari";
+      
+      let formattedCost = "";
+      if (directSumCost >= 1000000000) formattedCost = (directSumCost / 1000000000).toFixed(2) + " M";
+      else if (directSumCost >= 1000000) formattedCost = (directSumCost / 1000000).toFixed(2) + " Jt";
+      else formattedCost = directSumCost.toLocaleString('id-ID');
+      document.getElementById('kpiCost').innerText = "Rp " + formattedCost;
+      document.getElementById('valDamage').innerText = damageRate.toFixed(2) + "%";
+      
+      const listEl = document.getElementById('deadStockList');
+      listEl.innerHTML = '';
+      if(deadStockItems.length === 0) listEl.innerHTML = '<li class="text-xs text-slate-400">Tidak ada stok kritis > 10 bulan.</li>';
+      else deadStockItems.forEach(item => listEl.innerHTML += \`<li class="flex justify-between items-center text-xs p-1 hover:bg-red-50 rounded"><span><strong>\${item.sku}</strong></span> <span>\${item.qty.toLocaleString()} \${currentUnit}</span></li>\`);
+
+      renderAgingTable(stockGt3Mo, stockGt5Mo, stockGt10Mo);
+      
+      // CALL NEW UTILIZATION CHART RENDERER
+      renderUtilChart(sortedKeys, trendData, currentStockForDOI); // Passing trendData keys for X-Axis match
+      
+      renderTrendChart(sortedKeys, trendData);
+      renderAgingChart(aging);
+      renderTopSKU(skuData);
+      generateAIInsights(doi, 0, deadStockItems.length, damageRate, currentStockForDOI);
+    }
+
+    // --- CHART UTILISASI BARU ---
+    function renderUtilChart(keys, trendData, currentStock) {
+        // Tentukan Kapasitas Maksimal
+        let maxCap = 0;
+        if (currentUnit === 'ton') {
+            maxCap = SETTINGS.MAX_CAPACITY;
+        } else {
+            // Jika Qty, ambil dari penjumlahan input manual (Zak + Box) sebagai proxy total kapasitas
+            const maxZak = parseFloat(document.getElementById('inputMaxZak').value) || 0;
+            const maxBox = parseFloat(document.getElementById('inputMaxBox').value) || 0;
+            maxCap = maxZak + maxBox;
+            if (maxCap === 0) maxCap = 1000; // Fallback biar grafik gak error
+        }
+
+        // Data Stok Harian (Historical)
+        // Kita ambil 'stock' dari trendData yang sudah dihitung cumulative
+        const stockSeries = keys.map(k => trendData[k].stock);
+        
+        // Data Kapasitas (Garis Lurus / Constant)
+        const capacitySeries = new Array(keys.length).fill(maxCap);
+
+        const options = {
+            series: [
+                { name: 'Stok On Hand', type: 'area', data: stockSeries },
+                { name: 'Max Capacity', type: 'line', data: capacitySeries }
+            ],
+            chart: { 
+                type: 'line', 
+                height: 300, 
+                toolbar: { show: false },
+                fontFamily: 'Plus Jakarta Sans, sans-serif'
+            },
+            stroke: { 
+                width: [2, 2], 
+                curve: 'smooth',
+                dashArray: [0, 5] // Garis kapasitas putus-putus
+            },
+            colors: ['#3b82f6', '#ef4444'], // Biru (Stok), Merah (Kap)
+            fill: {
+                type: ['gradient', 'solid'],
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.3,
+                    opacityTo: 0.05,
+                    stops: [0, 100]
+                }
+            },
+            xaxis: { 
+                categories: keys,
+                labels: { show: false } // Sembunyikan label X agar bersih, tooltip tetap muncul
+            },
+            yaxis: {
+                title: { text: currentUnit === 'qty' ? 'Qty' : 'Ton' }
+            },
+            tooltip: {
+                y: {
+                    formatter: function (val) {
+                        let suffix = currentUnit === 'qty' ? ' Unit' : ' Tn';
+                        return val.toLocaleString('id-ID') + suffix;
+                    }
+                }
+            },
+            legend: { position: 'top' },
+            dataLabels: { enabled: false }
+        };
+
+        if(charts.util) charts.util.destroy();
+        charts.util = new ApexCharts(document.querySelector("#chartUtilization"), options);
+        charts.util.render();
+    }
+
+    function renderSummaryCard(summaryData, totalIn, totalOut) {
+        const selMonth = document.getElementById('filterMonth').value;
+        const badgeEl = document.getElementById('badgeYTD');
+        const titleEl = document.getElementById('titleYTD');
+        const listEl = document.getElementById('listYTD');
+        
+        const ratioIn = document.getElementById('ratioBarIn');
+        const ratioOut = document.getElementById('ratioBarOut');
+        const txtIn = document.getElementById('textRatioIn');
+        const txtOut = document.getElementById('textRatioOut');
+
+        if(selMonth === 'all') {
+            badgeEl.innerText = "YTD";
+            titleEl.innerText = "Performance YTD (Tahun ini)";
+        } else {
+            badgeEl.innerText = "MTD";
+            const monthNames = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+            titleEl.innerText = \`Performance MTD (\${monthNames[parseInt(selMonth)]})\`;
+        }
+        
+        const grandTotal = totalIn + totalOut;
+        let pctIn = 50, pctOut = 50;
+        
+        if(grandTotal > 0) {
+            pctIn = (totalIn / grandTotal) * 100;
+            pctOut = (totalOut / grandTotal) * 100;
+        } else {
+            pctIn = 0; pctOut = 0;
+        }
+        
+        ratioIn.style.width = pctIn + "%";
+        ratioOut.style.width = pctOut + "%";
+        
+        const formatCompact = (num) => {
+            if(num >= 1000000) return (num/1000000).toFixed(1) + 'M';
+            if(num >= 1000) return (num/1000).toFixed(1) + 'K';
+            return num.toLocaleString('id-ID');
+        };
+
+        let ratioUnit = currentUnit === 'qty' ? '' : ' Tn';
+        txtIn.innerText = \`Masuk: \${formatCompact(totalIn)}\${ratioUnit} (\${pctIn.toFixed(0)}%)\`;
+        txtOut.innerText = \`Keluar: \${formatCompact(totalOut)}\${ratioUnit} (\${pctOut.toFixed(0)}%)\`;
+
+        listEl.innerHTML = '';
+        const sortedItems = Object.entries(summaryData).sort((a,b) => Math.abs(b[1].val) - Math.abs(a[1].val));
+        
+        if (sortedItems.length === 0) {
+            listEl.innerHTML = '<li class="text-xs text-slate-400 italic">Tidak ada transaksi.</li>';
+            return;
+        }
+
+        sortedItems.forEach(([type, dataObj]) => {
+            if (dataObj.val !== 0) {
+                // Determine UOM Label based on Set content
+                let uomLabel = "";
+                if (currentUnit === 'ton') {
+                    uomLabel = ' Tn';
+                } else {
+                    if (dataObj.uoms.size === 1) {
+                         uomLabel = ' ' + Array.from(dataObj.uoms)[0];
+                    } else if (dataObj.uoms.size > 1) {
+                         uomLabel = ' Mix';
+                    } else {
+                         uomLabel = ' Unit';
+                    }
+                }
+
+                const li = document.createElement('li');
+                li.className = "flex justify-between items-center";
+                li.innerHTML = \`
+                    <span class="text-slate-600 truncate mr-2" title="\${type}">\${type}</span>
+                    <span class="font-bold text-slate-800">\${Math.abs(dataObj.val).toLocaleString('id-ID')}\${uomLabel}</span>
+                \`;
+                listEl.appendChild(li);
+            }
+        });
+    }
+
+    function renderAgingTable(gt3, gt5, gt10) {
+        const tbody = document.getElementById('agingTableBody');
+        tbody.innerHTML = '';
+        
+        const createRow = (label, data, colorClass, key) => {
+            let valStr = "";
+            if (data.val >= 1000000000) valStr = (data.val / 1000000000).toFixed(2) + " M";
+            else if (data.val >= 1000000) valStr = (data.val / 1000000).toFixed(2) + " Jt";
+            else valStr = data.val.toLocaleString('id-ID');
+            let unitLabel = currentUnit === 'qty' ? 'Unit' : ' Tn';
+
+            return \`
+            <tr class="hover:bg-slate-50 transition border-b border-slate-50 last:border-none cursor-pointer group" onclick="openDetailModal('\${key}', '\${label}')">
+                <td class="px-4 py-3 font-medium text-slate-700 flex items-center gap-2">
+                   \${label} <i class="ph-bold ph-caret-right text-slate-300 group-hover:text-indigo-500 transition"></i>
+                </td>
+                <td class="px-4 py-3 text-right font-bold \${colorClass}">\${data.qty.toLocaleString('id-ID')} \${unitLabel}</td>
+                <td class="px-4 py-3 text-right text-xs font-mono text-slate-500">Rp \${valStr}</td>
+                <td class="px-4 py-3 text-center">
+                    <button class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-full transition">Lihat</button>
+                </td>
+            </tr>
+            \`;
+        };
+        
+        tbody.innerHTML += createRow('> 3 Bulan', gt3, 'text-yellow-600', 'gt3');
+        tbody.innerHTML += createRow('> 5 Bulan', gt5, 'text-orange-600', 'gt5');
+        tbody.innerHTML += createRow('> 10 Bulan', gt10, 'text-red-600', 'gt10');
+    }
+
+    function openDetailModal(key, title) {
+        const modal = document.getElementById('detailModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const tbody = document.getElementById('modalTableBody');
+        
+        modalTitle.innerText = \`Detail Stok: \${title}\`;
+        tbody.innerHTML = '';
+        
+        const items = detailAgingData[key] || [];
+        
+        if (items.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-slate-400">Tidak ada data detail.</td></tr>';
+        } else {
+            items.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 border-b border-slate-50";
+                tr.innerHTML = \`
+                    <td class="px-4 py-3 text-slate-600">\${item.date}</td>
+                    <td class="px-4 py-3 font-semibold text-slate-800">\${item.sku}</td>
+                    <td class="px-4 py-3 text-slate-600 max-w-xs truncate" title="\${item.name}">\${item.name}</td>
+                    <td class="px-4 py-3 font-mono text-xs text-indigo-600">\${item.lot}</td>
+                    <td class="px-4 py-3 text-right font-bold">\${item.qty.toLocaleString('id-ID')} \${item.uom}</td>
+                    <td class="px-4 py-3 text-right text-red-500 font-semibold">\${item.days} Hari</td>
+                \`;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        modal.classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('detailModal').classList.remove('active');
+    }
+
+    document.getElementById('detailModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().then(() => {
+            document.body.classList.add('overflow-hidden');
+            setTimeout(fitDashboard, 200); 
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().then(() => {
+            document.body.classList.remove('overflow-hidden');
+            resetDashboard();
+          });
+        }
+      }
+    }
+
+    function fitDashboard() {
+        const container = document.getElementById('dashboard-container');
+        const footer = document.querySelector('.fixed.bottom-0');
+        
+        container.style.transform = 'none';
+        container.style.width = 'auto';
+        
+        const windowW = window.innerWidth;
+        const windowH = window.innerHeight - (footer ? footer.offsetHeight : 30); 
+        
+        const contentW = container.scrollWidth;
+        const contentH = container.scrollHeight;
+        
+        const scaleX = windowW / contentW;
+        const scaleY = windowH / contentH;
+        const scale = Math.min(scaleX, scaleY);
+        
+        container.style.transform = \`scale(\${scale})\`;
+        container.style.width = \`\${100 / scale}%\`; 
+    }
+    
+    function resetDashboard() {
+         const container = document.getElementById('dashboard-container');
+         container.style.transform = '';
+         container.style.width = '';
+    }
+
+    window.addEventListener('resize', () => {
+        if(document.fullscreenElement) fitDashboard();
+    });
+
+    function updateUtilization() {
+      const maxZak = parseFloat(document.getElementById('inputMaxZak').value) || 1;
+      const maxBox = parseFloat(document.getElementById('inputMaxBox').value) || 1;
+      const pctZak = Math.min((globalStockZak / maxZak) * 100, 100);
+      const pctBox = Math.min((globalStockBox / maxBox) * 100, 100);
+      document.getElementById('barUtilZak').style.width = pctZak + '%';
+      document.getElementById('utilTextZak').innerText = pctZak.toFixed(1) + '% (' + globalStockZak.toLocaleString('id-ID') + ')';
+      document.getElementById('barUtilBox').style.width = pctBox + '%';
+      document.getElementById('utilTextBox').innerText = pctBox.toFixed(1) + '% (' + globalStockBox.toLocaleString('id-ID') + ')';
+    }
+
+    function generateAIInsights(doi, util, deadCount, dmg, stock) {
+      const aiContainer = document.getElementById('aiTicker');
+      let insights = [];
+
+      if (doi > SETTINGS.TARGET_DOI * 1.5) {
+        insights.push(\`<span class="flex items-center gap-1"><i class="ph-bold ph-warning-circle text-yellow-300"></i> <strong>Perhatian:</strong> Perputaran stok lambat (\${doi.toFixed(0)} hari)</span>\`);
+      } else if (doi < SETTINGS.TARGET_DOI * 0.5 && stock > 0) {
+        insights.push(\`<span class="flex items-center gap-1"><i class="ph-bold ph-lightning text-yellow-300"></i> <strong>Peluang:</strong> Perputaran barang cepat! Pertimbangkan buffer stock</span>\`);
+      } else {
+        insights.push(\`<span class="flex items-center gap-1"><i class="ph-bold ph-check-circle text-emerald-300"></i> Kesehatan stok terjaga dengan baik</span>\`);
+      }
+
+      if (deadCount > 0) {
+        insights.push(\`<span class="flex items-center gap-1"><i class="ph-bold ph-skull text-rose-300"></i> Terdeteksi <strong>\${deadCount} SKU Dead Stock</strong> (>10 bulan)</span>\`);
+      }
+
+      const maxZak = parseFloat(document.getElementById('inputMaxZak').value) || 1;
+      const utilZak = (globalStockZak / maxZak) * 100;
+      
+      if (utilZak > 90) {
+        insights.push(\`<span class="flex items-center gap-1"><i class="ph-bold ph-house-line text-rose-300"></i> <strong>Pallet Penuh!</strong> Utilisasi Zak \${utilZak.toFixed(1)}%</span>\`);
+      }
+
+      if(insights.length === 0) insights.push("Menunggu data analisis...");
+      
+      aiContainer.innerHTML = insights.join('<span class="mx-6 text-indigo-400">|</span>');
+    }
+
+    function renderTrendChart(keys, data) {
+      const sIn = keys.map(k => data[k].in); const sOut = keys.map(k => data[k].out); const sStock = keys.map(k => data[k].stock);
+      const options = { series: [{ name: 'Masuk', type: 'column', data: sIn }, { name: 'Keluar', type: 'column', data: sOut }, { name: 'Stok', type: 'area', data: sStock }], chart: { type: 'line', height: 350, toolbar: { show: false }, fontFamily: 'Plus Jakarta Sans' }, stroke: { width: [0, 0, 3], curve: 'smooth' }, plotOptions: { bar: { columnWidth: '50%', borderRadius: 4 } }, colors: ['#3b82f6', '#ef4444', '#cbd5e1'], fill: { opacity: [1, 1, 0.2] }, xaxis: { categories: keys }, yaxis: [{ show: false }], tooltip: { y: { formatter: (val) => val.toLocaleString('id-ID') } }, legend: { position: 'top' }, dataLabels: { enabled: false } };
+      if(charts.trend) charts.trend.destroy(); charts.trend = new ApexCharts(document.querySelector("#chartTrend"), options); charts.trend.render();
+    }
+    
+    function renderAgingChart(aging) {
+      const options = { series: Object.values(aging), labels: Object.keys(aging), colors: ['#10b981', '#f59e0b', '#f97316', '#ef4444'], chart: { type: 'donut', height: 240, fontFamily: 'Plus Jakarta Sans' }, dataLabels: { enabled: false }, legend: { show: false } };
+      if(charts.aging) charts.aging.destroy(); charts.aging = new ApexCharts(document.querySelector("#chartPie"), options); charts.aging.render();
+      document.getElementById('agingLegend').innerHTML = Object.keys(aging).map((lbl, i) => \`<div class="flex justify-between text-sm"><div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full" style="background-color: \${options.colors[i]}"></div><span class="text-slate-600">\${lbl}</span></div><span class="font-bold">\${Object.values(aging)[i]}%</span></div>\`).join('');
+    }
+
+    function renderTopSKU(skuData) {
+      const topItems = Object.entries(skuData).map(([k,v]) => ({ sku: k, name: v.name, qty: v.qty })).sort((a,b) => b.qty - a.qty).slice(0, 5);
+      const options = { series: [{ name: currentUnit, data: topItems.map(i => i.qty) }], chart: { type: 'bar', height: 280, toolbar: { show: false }, fontFamily: 'Plus Jakarta Sans' }, plotOptions: { bar: { horizontal: true, borderRadius: 4 } }, colors: ['#3b82f6'], xaxis: { categories: topItems.map(i => i.sku) }, dataLabels: { enabled: true, textAnchor: 'start', style: { colors: ['#fff'] }, formatter: (val) => val.toLocaleString('id-ID') }, tooltip: { custom: ({dataPointIndex}) => \`<div class="p-2 bg-white border rounded shadow"><div class="font-bold">\${topItems[dataPointIndex].sku}</div><div class="text-xs">\${topItems[dataPointIndex].name}</div><div class="text-blue-600 font-bold">\${topItems[dataPointIndex].qty}</div></div>\` } };
+      if(charts.sku) charts.sku.destroy(); charts.sku = new ApexCharts(document.querySelector("#chartTopSKU"), options); charts.sku.render();
+    }
+
+    function setUnit(u) { currentUnit = u; document.getElementById('btnQty').className = u==='qty' ? "px-4 py-1.5 rounded-lg text-sm font-medium transition bg-blue-600 text-white shadow-sm" : "px-4 py-1.5 rounded-lg text-sm font-medium transition text-slate-600 hover:bg-slate-100"; document.getElementById('btnTon').className = u==='ton' ? "px-4 py-1.5 rounded-lg text-sm font-medium transition bg-blue-600 text-white shadow-sm" : "px-4 py-1.5 rounded-lg text-sm font-medium transition text-slate-600 hover:bg-slate-100"; applyFilters(); }
+    function setTrendMode(m) { trendMode = m; document.getElementById('btnTrendMonth').className = m==='monthly' ? "text-xs px-3 py-1 rounded font-bold bg-white shadow-sm text-slate-800 transition" : "text-xs px-3 py-1 rounded text-slate-500 hover:bg-white transition"; document.getElementById('btnTrendDay').className = m==='daily' ? "text-xs px-3 py-1 rounded font-bold bg-white shadow-sm text-slate-800 transition" : "text-xs px-3 py-1 rounded text-slate-500 hover:bg-white transition"; applyFilters(); }
+    
+    function parseNum(val) { 
+      if (!val) return 0; 
+      let str = String(val).trim();
+      str = str.replace(/[^\d.,-]/g, ''); 
+      if (str === '') return 0;
+      str = str.replace(/\./g, '').replace(/,/g, '.');
+      return parseFloat(str) || 0; 
+    }
+
+    function parseDate(input) { if(!input) return null; if(input instanceof Date) return input; if(typeof input === 'string') { const clean = input.trim().replace(/[-.]/g, '/'); const datePart = clean.split(' ')[0]; const parts = datePart.split('/'); if(parts.length === 3) { if(parts[0].length === 4) return new Date(parts[0], parts[1]-1, parts[2]); if(parts[2].length === 4) return new Date(parts[2], parts[1]-1, parts[0]); } } const d = new Date(input); return isNaN(d.getTime()) ? null : d; }
+  <\/script>
+</body>
+</html>`;
+
+        // --- NEW DASHBOARD INVENTORY COMPONENT ---
+        const DashboardInventoryContent = () => {
+            return (
+                <div className="w-full h-[85vh] bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-200">
+                    <iframe 
+                        srcDoc={DASHBOARD_INVENTORY_HTML}
+                        className="w-full h-full border-0"
+                        title="Dashboard Inventory"
+                    />
+                </div>
+            );
+        };
+
+        // --- NEW INVENTORY PAGE (EMBEDDED) ---
+        const InventoryContent = () => {
+            return (
+                <div className="animate-fadeIn flex flex-col h-[80vh] w-full">
+                    <div className="bg-white/80 backdrop-blur-md border border-white/60 p-4 rounded-t-3xl shadow-sm flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-100 rounded-xl">
+                                <Icons.Box className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-slate-800">Sistem Manajemen Inventaris</h3>
+                                <p className="text-xs text-slate-500">Terhubung ke Aplikasi Gudang Pusat</p>
+                            </div>
+                        </div>
+                        <a 
+                            href="https://script.google.com/macros/s/AKfycbzEeY3eoO_Vpvgf9Vt8nNoRhEU0sXI8RFO1anB_d3FcTuqeNbrCqAg_nO_0oO0XVFU/exec" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-xs font-semibold text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
+                        >
+                            Buka di Tab Baru <Icons.ArrowRight className="w-3 h-3" />
+                        </a>
+                    </div>
+                    <div className="flex-1 bg-white border-x border-b border-white/60 rounded-b-3xl shadow-sm overflow-hidden relative">
+                        <iframe 
+                            src="https://script.google.com/macros/s/AKfycbzEeY3eoO_Vpvgf9Vt8nNoRhEU0sXI8RFO1anB_d3FcTuqeNbrCqAg_nO_0oO0XVFU/exec"
+                            className="w-full h-full border-0"
+                            title="Inventory System"
+                            allow="geolocation; microphone; camera"
+                        ></iframe>
                     </div>
                 </div>
             );
@@ -466,9 +1746,9 @@
 
             const menuItems = [
                 { id: 'Home', icon: Icons.Home, label: 'Home' },
-                // DIRECT LINK INVENTORY
-                { id: 'Inventory', icon: Icons.Box, label: 'Inventory', url: 'https://myscm-app.github.io/logscm/' },
-                // NEW PAGES
+                { id: 'Inventory', icon: Icons.Box, label: 'Inventory' }, 
+                // NEW MENU ITEM
+                { id: 'DashboardInventory', icon: Icons.LayoutDashboard, label: 'Dash. Inv' },
                 { id: 'Ops Support', icon: Icons.Headphones, label: 'Ops Support' },
                 { id: 'Trading', icon: Icons.TrendingUp, label: 'Trading' },
                 { id: 'Koperasi', icon: Icons.Users, label: 'Koperasi' },
@@ -477,6 +1757,8 @@
             const renderContent = () => {
                 switch(activeTab) {
                     case 'Home': return <HomeContent />;
+                    case 'Inventory': return <InventoryContent />;
+                    case 'DashboardInventory': return <DashboardInventoryContent />; // NEW RENDER CASE
                     case 'Ops Support': return <OpsSupportContent />;
                     case 'Trading': return <TradingContent />;
                     case 'Koperasi': return <KoperasiContent />;
@@ -486,10 +1768,8 @@
 
             const handleMenuClick = (item) => {
                 if (item.url) {
-                    // Jika ada URL (Inventory), redirect langsung
                     window.location.href = item.url;
                 } else {
-                    // Jika tidak, ganti Tab SPA
                     setActiveTab(item.id);
                 }
             };
