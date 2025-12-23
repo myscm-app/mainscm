@@ -123,7 +123,10 @@
             Printer: (p) => <LucideIcon name="Printer" {...p} />,
             FileCheck: (p) => <LucideIcon name="FileCheck" {...p} />,
             PlayCircle: (p) => <LucideIcon name="PlayCircle" {...p} />,
-            LayoutDashboard: (p) => <LucideIcon name="LayoutDashboard" {...p} />
+            LayoutDashboard: (p) => <LucideIcon name="LayoutDashboard" {...p} />,
+            Briefcase: (p) => <LucideIcon name="Briefcase" {...p} />,
+            Globe: (p) => <LucideIcon name="Globe" {...p} />,
+            ExternalLink: (p) => <LucideIcon name="ExternalLink" {...p} />
         };
 
         // --- REUSABLE AUTH MODAL ---
@@ -546,6 +549,86 @@
                                 </p>
                             </div>
                         </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- NEW ERP CONTENT PAGE ---
+        const ERPContent = () => {
+            const erpLinks = [
+                { 
+                    title: "Business Central", 
+                    url: "https://mitrakiara-bc.com/BusinessCentral/SignIn?ReturnUrl=%2FBusinessCentral%2F", 
+                    icon: Icons.Factory, 
+                    color: "bg-teal-600", 
+                    desc: "Sistem ERP Business Central (Dynamic Link)" 
+                },
+                { 
+                    title: "Shipment SIG", 
+                    url: "https://pantau.sig.id/pantau/index.sggrp.php", 
+                    icon: Icons.Truck, 
+                    color: "bg-blue-600", 
+                    desc: "Pantau pengiriman SIG secara realtime" 
+                },
+                { 
+                    title: "CSMS Online", 
+                    url: "https://csms.sig.id/sdonline/login.php", 
+                    icon: Icons.ShieldCheck, 
+                    color: "bg-orange-500", 
+                    desc: "Contractor Safety Management System" 
+                },
+                { 
+                    title: "MyScm Portal", 
+                    url: "https://myscm-app.github.io/myscm-login/", 
+                    icon: Icons.LayoutDashboard, 
+                    color: "bg-indigo-600", 
+                    desc: "Akses login ke My Supply Chain Management" 
+                }
+            ];
+
+            return (
+                 <div className="animate-fadeIn space-y-8">
+                    {/* Header Section */}
+                    <div className="bg-slate-800 rounded-3xl p-8 text-white relative overflow-hidden shadow-lg shadow-slate-300">
+                        <div className="relative z-10 max-w-2xl">
+                            <h2 className="text-3xl font-bold mb-2">ERP & External Systems</h2>
+                            <p className="text-slate-300">Pusat akses cepat ke aplikasi ERP, sistem pemantauan, dan portal manajemen eksternal.</p>
+                        </div>
+                         <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-10 translate-y-10">
+                            <Icons.Activity className="w-64 h-64" />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {erpLinks.map((link, idx) => (
+                            <a 
+                                href={link.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                key={idx} 
+                                className="glass-panel p-6 rounded-2xl group hover:border-blue-300 transition-all cursor-pointer flex items-center gap-6 hover:-translate-y-1 hover:shadow-xl"
+                            >
+                                <div className={`w-16 h-16 rounded-2xl ${link.color} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform shrink-0`}>
+                                    <link.icon className="w-8 h-8" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-slate-800 mb-1 group-hover:text-blue-700 transition-colors flex items-center gap-2">
+                                        {link.title}
+                                        <Icons.ExternalLink className="w-4 h-4 text-slate-400" />
+                                    </h3>
+                                    <p className="text-sm text-slate-500">{link.desc}</p>
+                                </div>
+                                <div className="ml-auto">
+                                    <Icons.ArrowRight className="w-5 h-5 text-slate-300 group-hover:text-blue-600 transition-colors" />
+                                </div>
+                            </a>
+                        ))}
+                    </div>
+
+                    <div className="p-4 rounded-xl bg-blue-50 border border-blue-100 text-blue-800 text-sm flex items-center gap-2">
+                        <Icons.AlertCircle className="w-4 h-4" />
+                        <span><strong>Catatan:</strong> Pastikan Anda terhubung ke jaringan VPN perusahaan jika mengalami kendala akses pada link di atas.</span>
                     </div>
                 </div>
             );
@@ -1747,8 +1830,9 @@
             const menuItems = [
                 { id: 'Home', icon: Icons.Home, label: 'Home' },
                 { id: 'Inventory', icon: Icons.Box, label: 'Inventory' }, 
-                // NEW MENU ITEM
                 { id: 'DashboardInventory', icon: Icons.LayoutDashboard, label: 'Dash. Inv' },
+                // NEW MENU ITEM ADDED HERE
+                { id: 'ERP', icon: Icons.Briefcase, label: 'ERP' },
                 { id: 'Ops Support', icon: Icons.Headphones, label: 'Ops Support' },
                 { id: 'Trading', icon: Icons.TrendingUp, label: 'Trading' },
                 { id: 'Koperasi', icon: Icons.Users, label: 'Koperasi' },
@@ -1758,7 +1842,9 @@
                 switch(activeTab) {
                     case 'Home': return <HomeContent />;
                     case 'Inventory': return <InventoryContent />;
-                    case 'DashboardInventory': return <DashboardInventoryContent />; // NEW RENDER CASE
+                    case 'DashboardInventory': return <DashboardInventoryContent />;
+                    // NEW CASE FOR ERP CONTENT
+                    case 'ERP': return <ERPContent />;
                     case 'Ops Support': return <OpsSupportContent />;
                     case 'Trading': return <TradingContent />;
                     case 'Koperasi': return <KoperasiContent />;
@@ -1838,7 +1924,7 @@
 
                     <main className="container mx-auto px-4 md:px-6 pt-28 pb-12 relative z-10">
                         <div className="mb-8">
-                            <h2 className="text-3xl font-bold text-slate-800 mb-1 tracking-tight">{activeTab}</h2>
+                            <h2 className="text-3xl font-bold text-slate-800 mb-1 tracking-tight">{activeTab === 'ERP' ? 'ERP Systems' : activeTab}</h2>
                             <p className="text-slate-500 text-sm font-medium">Operations Dashboard & Control Center</p>
                         </div>
                         {renderContent()}
