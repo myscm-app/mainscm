@@ -1829,8 +1829,18 @@
 
             const menuItems = [
                 { id: 'Home', icon: Icons.Home, label: 'Home' },
-                { id: 'Inventory', icon: Icons.Box, label: 'Inventory' }, 
-                { id: 'DashboardInventory', icon: Icons.LayoutDashboard, label: 'Dash. Inv' },
+                { 
+                    id: 'Inventory', 
+                    icon: Icons.Box, 
+                    label: 'Inventory',
+                    url: 'https://script.google.com/macros/s/AKfycbzEeY3eoO_Vpvgf9Vt8nNoRhEU0sXI8RFO1anB_d3FcTuqeNbrCqAg_nO_0oO0XVFU/exec'
+                }, 
+                { 
+                    id: 'DashboardInventory', 
+                    icon: Icons.LayoutDashboard, 
+                    label: 'Dash. Inv',
+                    url: 'https://script.google.com/macros/s/AKfycbzM5MksdebCt3Ua7fCDoiV3uq9K0Q25NBsacZnkDdZLwmO0dUfKokBM2tkprmmFUKVfPw/exec'
+                },
                 // NEW MENU ITEM ADDED HERE
                 { id: 'ERP', icon: Icons.Briefcase, label: 'ERP' },
                 { id: 'Ops Support', icon: Icons.Headphones, label: 'Ops Support' },
@@ -1854,7 +1864,7 @@
 
             const handleMenuClick = (item) => {
                 if (item.url) {
-                    window.location.href = item.url;
+                    window.open(item.url, '_blank');
                 } else {
                     setActiveTab(item.id);
                 }
