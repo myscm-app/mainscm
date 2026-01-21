@@ -145,6 +145,7 @@
 
             const handleSubmit = (e) => {
                 e.preventDefault();
+                // Check credentials directly
                 if (username === requiredUser && password === requiredPass) {
                     onSuccess();
                 } else {
@@ -397,11 +398,12 @@
                 { name: "Bahan Bangunan", type: "General", stock: "Medium", icon: Icons.Package }
             ];
 
-            const tradingLink = "https://myscm-app.github.io/SPJ/";
+            // UPDATED LINK HERE
+            const tradingLink = "https://myscm-app.github.io/SPJ-Trading/";
 
             // Surat Jalan MKI (Sekarang Tanpa Password)
             const openMKI = () => {
-                window.open(tradingLink, '_blank');
+                window.open("https://myscm-app.github.io/SPJ/", '_blank');
             };
 
             // Surat Jalan Trading (Sekarang Pakai Password)
@@ -423,8 +425,9 @@
                             setModalConfig({ ...modalConfig, isOpen: false });
                         }}
                         title={modalConfig.title || "Login Akses"}
-                        requiredUser="tadmin"
-                        requiredPass="trading01"
+                        // UPDATED CREDENTIALS HERE
+                        requiredUser="admin"
+                        requiredPass="admin123"
                     />
 
                     <div className="bg-gradient-to-r from-purple-800 to-indigo-900 rounded-3xl p-8 text-white shadow-lg shadow-indigo-200">
@@ -1272,7 +1275,7 @@
         if (isOut) summaryTotalOut += Math.abs(valMain);
 
         if(!typeSummary[typeDisplay]) {
-            typeSummary[typeDisplay] = { val: 0, uoms: new Set() };
+             typeSummary[typeDisplay] = { val: 0, uoms: new Set() };
         }
         typeSummary[typeDisplay].val += Math.abs(valMain); // Gunakan absolut untuk summary jenis transaksi
         typeSummary[typeDisplay].uoms.add(uom);
@@ -1915,7 +1918,8 @@
                 },
                 { id: 'ERP', icon: Icons.Briefcase, label: 'ERP' },
                 { id: 'Ops Support', icon: Icons.Headphones, label: 'Ops Support' },
-                // Trading and Koperasi removed from top menu as requested
+                { id: 'Trading', icon: Icons.TrendingUp, label: 'Trading' },
+                { id: 'Koperasi', icon: Icons.Users, label: 'Koperasi' },
             ];
 
             const renderContent = () => {
