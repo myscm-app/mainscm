@@ -1910,26 +1910,25 @@
                     label: 'Inventory',
                     url: 'https://script.google.com/macros/s/AKfycbyfxx-1B9TAINHUuT4-Zglv_vI3L8QaqzIwMIrlycLofcaaFfdCqJRJUrACewkCLPSi/exec'
                 }, 
-               ExpansionTile(
-  leading: Icon(Icons.local_shipping),
-  title: Text('Delivery'),
+               {
+  id: 'Delivery',
+  icon: Icons.local_shipping,
+  label: 'Delivery',
   children: [
-    ListTile(
-      leading: Icon(Icons.print),
-      title: Text('System Cetak SPJ'),
-      onTap: () {
-        launchUrl(Uri.parse('https://my-scm.github.io/SPJ-MKI/'));
-      },
-    ),
-    ListTile(
-      leading: Icon(Icons.qr_code_scanner),
-      title: Text('Aplikasi Scan SPJ'),
-      onTap: () {
-        launchUrl(Uri.parse('https://myscm-app.github.io/scand-doc/'));
-      },
-    ),
+    {
+      id: 'CetakSPJ',
+      icon: Icons.print,
+      label: 'System Cetak SPJ',
+      url: 'https://my-scm.github.io/SPJ-MKI/',
+    },
+    {
+      id: 'ScanSPJ',
+      icon: Icons.qr_code_scanner,
+      label: 'Aplikasi Scan SPJ',
+      url: 'https://myscm-app.github.io/scand-doc/',
+    },
   ],
-);
+}
 
                 { 
                     id: 'DashboardInventory', 
