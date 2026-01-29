@@ -1911,24 +1911,25 @@
                     url: 'https://script.google.com/macros/s/AKfycbyfxx-1B9TAINHUuT4-Zglv_vI3L8QaqzIwMIrlycLofcaaFfdCqJRJUrACewkCLPSi/exec'
                 }, 
                {
-  id: 'Delivery',
-  icon: Icons.local_shipping,
-  label: 'Delivery',
-  children: [
-    {
-      id: 'CetakSPJ',
-      icon: Icons.print,
-      label: 'System Cetak SPJ',
-      url: 'https://my-scm.github.io/SPJ-MKI/',
-    },
-    {
-      id: 'ScanSPJ',
-      icon: Icons.qr_code_scanner,
-      label: 'Aplikasi Scan SPJ',
-      url: 'https://myscm-app.github.io/scand-doc/',
-    },
-  ],
-}
+                 { 
+    id: 'GithubApps', 
+    icon: Icons.folder_shared, // Ganti dengan Icons.github jika tersedia di library icon-mu
+    label: 'GitHub System',
+    submenu: [
+        { 
+            id: 'CetakSPJ', 
+            icon: Icons.local_shipping, // Icon lama (Delivery)
+            label: 'System Cetak SPJ',
+            url: 'https://my-scm.github.io/SPJ-MKI/'
+        },
+        { 
+            id: 'ScanSPJ', 
+            icon: Icons.qr_code_scanner, // Pastikan icon ini ada, atau ganti dengan Icons.camera_alt
+            label: 'Aplikasi Scan SPJ',
+            url: 'https://myscm-app.github.io/scand-doc/'
+        }
+    ]
+},
 
                 { 
                     id: 'DashboardInventory', 
