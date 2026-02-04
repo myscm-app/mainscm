@@ -3,19 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My SCM Center Portal</title>
+    <title>My SCM Center Portal (Cloud Sync)</title>
     
-    <!-- 1. Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- 2. Load React & ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     
-    <!-- 3. Load Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- 4. Load Lucide Icons -->
     <script src="https://unpkg.com/lucide@0.295.0/dist/umd/lucide.min.js"></script>
 
     <style>
@@ -56,6 +52,10 @@
     <div id="root"></div>
 
     <script type="text/babel">
+        // --- KONFIGURASI DATABASE CLOUD ---
+        // URL Script Web App yang Anda berikan
+        const API_URL = "https://script.google.com/macros/s/AKfycbybodmJ8v5WdGFpIRsTaWPMi-xV02c-ytTnF6HflTFfIBpYyDx5xBEoUduHlmRuPFjemA/exec";
+
         const { useState, useEffect, useRef } = React;
 
         // --- ICON HELPER COMPONENT ---
@@ -84,15 +84,27 @@
             return <span dangerouslySetInnerHTML={{ __html: svgContent }} className={`inline-flex items-center justify-center ${className || ''}`} />;
         };
 
-        // Icons Definition (Used for mapping string names to components)
         const AvailableIcons = [
             'Box', 'Home', 'Headphones', 'TrendingUp', 'Users', 'LogOut', 'Lock', 'User', 'Search', 'Bell', 
             'Activity', 'Truck', 'Package', 'AlertCircle', 'MessageSquare', 'Send', 'X', 'Bot', 'Minimize2', 
             'RefreshCw', 'DollarSign', 'AlertTriangle', 'Wrench', 'ShieldCheck', 'Sparkles', 'PenTool', 'Gem', 
             'Hammer', 'Construction', 'FileText', 'Receipt', 'ArrowRight', 'Factory', 'Pickaxe', 'Printer', 
             'FileCheck', 'PlayCircle', 'LayoutDashboard', 'Briefcase', 'Globe', 'ExternalLink', 'Folder', 
-            'QrCode', 'ChevronDown', 'Settings', 'Plus', 'Trash2', 'Save'
+            'QrCode', 'ChevronDown', 'Settings', 'Plus', 'Trash2', 'Save', 'List'
         ];
+
+        // --- CLOUD SYNC FUNCTION ---
+        const saveMenuToCloud = (menuData) => {
+            // Kita gunakan mode 'no-cors' agar tidak error di browser (Fire and Forget)
+            fetch(API_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ menuData: menuData })
+            })
+            .then(() => console.log("Data dikirim ke Cloud..."))
+            .catch(err => console.error("Gagal kirim data:", err));
+        };
 
         // --- REUSABLE AUTH MODAL ---
         const AuthModal = ({ isOpen, onClose, onSuccess, title, requiredUser, requiredPass }) => {
@@ -110,7 +122,6 @@
 
             const handleSubmit = (e) => {
                 e.preventDefault();
-                // Check credentials directly
                 if (username === requiredUser && password === requiredPass) {
                     onSuccess();
                 } else {
@@ -138,23 +149,11 @@
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
                                 <label className="block text-xs font-bold text-slate-600 mb-1">Username</label>
-                                <input 
-                                    type="text" 
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                    placeholder="Username"
-                                />
+                                <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Username" />
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-slate-600 mb-1">Password</label>
-                                <input 
-                                    type="password" 
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                    placeholder="Password"
-                                />
+                                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Password" />
                             </div>
                             
                             {error && (
@@ -193,15 +192,17 @@
             </div>
         );
 
-        // --- ADMIN DASHBOARD COMPONENT ---
+        // --- ADMIN DASHBOARD COMPONENT (UPDATED) ---
         const AdminDashboard = ({ menuItems, setMenuItems }) => {
             const [newMenu, setNewMenu] = useState({ id: '', label: '', icon: 'Box', url: '' });
             const [newSubMenu, setNewSubMenu] = useState({ parentId: '', label: '', icon: 'Box', url: '' });
+            const [isSyncing, setIsSyncing] = useState(false);
 
             const handleAddMenu = (e) => {
                 e.preventDefault();
                 if(!newMenu.id || !newMenu.label) return alert("ID dan Label wajib diisi");
                 
+                setIsSyncing(true);
                 const newItem = {
                     id: newMenu.id,
                     label: newMenu.label,
@@ -211,15 +212,18 @@
 
                 const updated = [...menuItems, newItem];
                 setMenuItems(updated);
-                localStorage.setItem('scm_menu_config', JSON.stringify(updated));
+                saveMenuToCloud(updated); // Simpan ke Cloud
+                
                 setNewMenu({ id: '', label: '', icon: 'Box', url: '' });
-                alert("Menu utama berhasil ditambahkan!");
+                setTimeout(() => setIsSyncing(false), 2000);
+                alert("Menu ditambahkan! Sedang sinkronisasi ke Cloud...");
             };
 
             const handleAddSubMenu = (e) => {
                 e.preventDefault();
                 if(!newSubMenu.parentId || !newSubMenu.label || !newSubMenu.url) return alert("Parent, Label, dan URL wajib diisi");
 
+                setIsSyncing(true);
                 const updated = menuItems.map(item => {
                     if (item.id === newSubMenu.parentId) {
                         const existingSub = item.submenu || [];
@@ -238,22 +242,29 @@
                 });
 
                 setMenuItems(updated);
-                localStorage.setItem('scm_menu_config', JSON.stringify(updated));
+                saveMenuToCloud(updated); // Simpan ke Cloud
+
                 setNewSubMenu({ parentId: '', label: '', icon: 'Box', url: '' });
-                alert("Sub menu berhasil ditambahkan!");
+                setTimeout(() => setIsSyncing(false), 2000);
+                alert("Sub menu ditambahkan! Sedang sinkronisasi ke Cloud...");
             };
 
             const handleDeleteMenu = (id) => {
                 if(!confirm("Yakin hapus menu ini?")) return;
+                setIsSyncing(true);
                 const updated = menuItems.filter(m => m.id !== id);
                 setMenuItems(updated);
-                localStorage.setItem('scm_menu_config', JSON.stringify(updated));
+                saveMenuToCloud(updated); // Simpan ke Cloud
+                setTimeout(() => setIsSyncing(false), 2000);
             };
 
             const handleResetDefault = () => {
-                if(!confirm("Kembalikan ke pengaturan awal? Semua menu custom akan hilang.")) return;
-                localStorage.removeItem('scm_menu_config');
-                window.location.reload();
+                if(!confirm("Kembalikan ke pengaturan awal? Semua menu custom di Cloud akan dihapus.")) return;
+                setIsSyncing(true);
+                saveMenuToCloud([]); // Kosongkan data di Cloud
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             };
 
             return (
@@ -261,10 +272,17 @@
                     <div className="bg-slate-800 rounded-3xl p-8 text-white relative overflow-hidden">
                          <div className="relative z-10">
                             <h2 className="text-3xl font-bold mb-2">Admin Configuration</h2>
-                            <p className="text-slate-300">Kelola struktur menu dan navigasi aplikasi.</p>
-                            <button onClick={handleResetDefault} className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-bold flex items-center gap-2">
-                                <LucideIcon name="RefreshCw" className="w-4 h-4" /> Reset ke Default
-                            </button>
+                            <p className="text-slate-300">Kelola struktur menu dan navigasi aplikasi (Cloud Sync).</p>
+                            <div className="flex gap-3 mt-4">
+                                <button onClick={handleResetDefault} className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-bold flex items-center gap-2">
+                                    <LucideIcon name="RefreshCw" className="w-4 h-4" /> Reset Cloud
+                                </button>
+                                {isSyncing && (
+                                    <span className="px-4 py-2 bg-yellow-500/20 text-yellow-300 rounded-lg text-sm font-bold flex items-center gap-2 animate-pulse">
+                                        <LucideIcon name="Save" className="w-4 h-4" /> Syncing...
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -298,7 +316,6 @@
                                     </div>
                                 </div>
                                 <button type="submit" className="w-full py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700">Simpan Menu</button>
-                                <p className="text-xs text-slate-400 italic">*Jika URL kosong, menu akan dianggap sebagai Tab Internal atau Container Submenu.</p>
                             </form>
                         </div>
 
@@ -377,7 +394,6 @@
         };
 
         // --- COMPONENTS HALAMAN LAINNYA ---
-        // (Sama seperti sebelumnya, hanya disesuaikan icon prop nya menjadi string)
 
         const HomeContent = ({ onNavigate }) => {
              const [rates, setRates] = useState([
@@ -641,8 +657,9 @@
             // ADMIN STATE
             const [adminLoginOpen, setAdminLoginOpen] = useState(false);
             const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+            const [isLoadingMenu, setIsLoadingMenu] = useState(true);
 
-            // DEFAULT MENUS (Refactored to use string for icons)
+            // DEFAULT MENUS (Fallback)
             const DEFAULT_MENUS = [
                 { id: 'Home', icon: 'Home', label: 'Home' },
                 { id: 'Inventory', icon: 'Box', label: 'Inventory', url: 'https://script.google.com/macros/s/AKfycbyfxx-1B9TAINHUuT4-Zglv_vI3L8QaqzIwMIrlycLofcaaFfdCqJRJUrACewkCLPSi/exec' }, 
@@ -666,23 +683,30 @@
                 },
             ];
 
-            const [menuItems, setMenuItems] = useState([]);
+            const [menuItems, setMenuItems] = useState(DEFAULT_MENUS);
 
+            // LOAD MENU DARI GOOGLE SHEET SAAT APP LOAD
             useEffect(() => {
                 const handleScroll = () => setScrolled(window.scrollY > 20);
                 window.addEventListener('scroll', handleScroll);
                 
-                // Initialize Menus from LocalStorage or Default
-                const savedMenus = localStorage.getItem('scm_menu_config');
-                if (savedMenus) {
-                    try {
-                        setMenuItems(JSON.parse(savedMenus));
-                    } catch(e) {
-                        setMenuItems(DEFAULT_MENUS);
-                    }
-                } else {
-                    setMenuItems(DEFAULT_MENUS);
-                }
+                // Fetch Menu dari Cloud
+                console.log("Loading menu from cloud...");
+                fetch(API_URL)
+                    .then(res => res.json())
+                    .then(data => {
+                        if(Array.isArray(data) && data.length > 0) {
+                            console.log("Menu berhasil diload:", data);
+                            setMenuItems(data);
+                        } else {
+                            console.log("Menu cloud kosong/error, pakai default.");
+                        }
+                        setIsLoadingMenu(false);
+                    })
+                    .catch(err => {
+                        console.error("Gagal koneksi ke cloud:", err);
+                        setIsLoadingMenu(false);
+                    });
 
                 return () => window.removeEventListener('scroll', handleScroll);
             }, []);
@@ -735,7 +759,7 @@
                                     <span className="text-xl font-bold text-slate-800 tracking-tight hidden md:inline">My SCM <span className="text-blue-600">Center</span></span>
                                 </div>
                                 <div className="hidden lg:flex items-center bg-slate-100/50 p-1 rounded-xl border border-white/40 shadow-sm backdrop-blur-md">
-                                    {menuItems.map((item) => {
+                                    {isLoadingMenu ? <span className="text-xs px-4 text-slate-500 animate-pulse">Syncing Menu...</span> : menuItems.map((item) => {
                                         const isActive = activeTab === item.id;
                                         if (item.submenu) {
                                             return (
@@ -773,7 +797,6 @@
                                     <LucideIcon name="Search" className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                                     <input type="text" placeholder="Search..." className="bg-white border border-slate-200 rounded-full pl-9 pr-4 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 w-40 transition-all" />
                                 </div>
-                                {/* User Profile / Admin Trigger */}
                                 <div 
                                     className={`h-9 w-9 rounded-full overflow-hidden border border-white shadow-sm cursor-pointer ${isAdminLoggedIn ? 'ring-2 ring-blue-500' : ''}`}
                                     onClick={() => !isAdminLoggedIn ? setAdminLoginOpen(true) : setActiveTab('Admin')}
