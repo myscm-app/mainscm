@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My SCM Center Portal (Cloud Sync)</title>
+    <title>My SCM Center Portal (Fast Load)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -229,9 +229,9 @@
                     if (item.id === newSubMenu.parentId) {
                         const existingSub = item.submenu || [];
                         const newSubId = newSubMenu.label.replace(/\s+/g, '') + Date.now();
-                        return {
-                            ...item,
-                            submenu: [...existingSub, { id: newSubId, label: newSubMenu.label, icon: newSubMenu.icon, url: newSubMenu.url }]
+                        return { 
+                            ...item, 
+                            submenu: [...existingSub, { id: newSubId, label: newSubMenu.label, icon: newSubMenu.icon, url: newSubMenu.url }] 
                         };
                     }
                     return item;
@@ -584,7 +584,9 @@
                                     <span className="text-xl font-bold text-slate-800 tracking-tight hidden md:inline">My SCM <span className="text-blue-600">Center</span></span>
                                 </div>
                                 <div className="hidden lg:flex items-center bg-slate-100/50 p-1 rounded-xl border border-white/40 shadow-sm backdrop-blur-md">
-                                    {isLoadingMenu ? <span className="text-xs px-4 text-slate-500 animate-pulse">Syncing Menu...</span> : menuItems.map((item) => {
+                                    
+                                    {/* FIX: RENDER MENU IMMEDIATELY, SHOW LOADING INDICATOR AS OVERLAY ONLY */}
+                                    {menuItems.map((item) => {
                                         const isActive = activeTab === item.id;
                                         if (item.submenu) {
                                             return (
@@ -604,6 +606,9 @@
                                         }
                                         return (<button key={item.id} onClick={() => handleMenuClick(item)} className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${isActive ? 'bg-white shadow-sm text-blue-600' : 'hover:bg-white/50 text-slate-500 hover:text-slate-700'}`}><LucideIcon name={item.icon} className={`w-4 h-4 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} /><span className="text-xs font-bold tracking-wide">{item.label}</span></button>);
                                     })}
+
+                                    {/* SMALL LOADING INDICATOR */}
+                                    {isLoadingMenu && <span className="ml-2 text-[10px] px-2 text-slate-400 animate-pulse flex items-center gap-1"><LucideIcon name="RefreshCw" className="w-3 h-3 animate-spin"/> Sync...</span>}
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
